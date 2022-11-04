@@ -19,10 +19,6 @@ def conv(A, K, rows_a: int, cols_a: int, rows_k: int, cols_k: int, bitwidth: int
         for c in range(cols_a):
             a[r][c] <<= A[row_a * r + bitwidth * c:
                           row_a * r + bitwidth * (c + 1)]
-            if r == 0 and c == 0:
-                print(f'RANGE: {row_a * r + bitwidth * c}, \
-                      {row_a * r + bitwidth * (c + 1)}')
-                rtl.probe(a[r][c], 'PROBE A(0, 0)')
 
     for r in range(rows_k):
         for c in range(cols_k):
