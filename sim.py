@@ -7,6 +7,18 @@ from conv_parallel import *
 def flatten(l): return [val for sublist in l for val in sublist]
 
 
+def int_to_binary(n, bits):
+    s = bin(n & ((1 << bits) - 1))[2:]
+    return f'{s:0>{bits}}'
+
+
+def binary_to_int(n, bits):
+    val = int(n, 2)
+    if (val & (1 << (bits - 1))):
+        val -= (1 << bits)
+    return val
+
+
 # Input
 A = [
     [2, 0, 1, 1],
@@ -17,12 +29,10 @@ A = [
 
 # Kernel
 K = [
-    [1, 0, 1],
+    [-1, 0, -1],
     [0, 0, 0],
-    [0, 1, 0]
+    [0, -1, 0]
 ]
-
-# TODO: Change binary conversion to use 2's complement to support negative numbers
 
 # # Sobel Kernel
 # K = [
@@ -57,8 +67,8 @@ sim = rtl.Simulation(tracer=sim_trace)
 # sim.step_multiple(sim_inputs)
 
 sim_inputs = {
-    'A': int(''.join([f'{i:08b}' for i in flat_a]), 2),
-    'K': int(''.join([f'{i:08b}' for i in flat_k]), 2)
+    'A': int(''.join([int_to_binary(i, bitwidth) for i in flat_a]), 2),
+    'K': int(''.join([int_to_binary(i, bitwidth) for i in flat_k]), 2)
 }
 
 # Show initial image
@@ -82,7 +92,7 @@ for cycle in range(1):
         for c in range(cols_r):
             binary_value = raw_binary[row_r * r + bitwidth * c:
                                       row_r * r + bitwidth * (c + 1)]
-            result_matrix[r][c] = int(binary_value, 2)
+            result_matrix[r][c] = binary_to_int(binary_value, bitwidth)
 
     print('[')
     for row in result_matrix:
