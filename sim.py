@@ -2,21 +2,7 @@ import pyrtl as rtl
 from matplotlib import pyplot as plt
 
 from conv_parallel import *
-
-
-def flatten(l): return [val for sublist in l for val in sublist]
-
-
-def int_to_binary(n, bits):
-    s = bin(n & ((1 << bits) - 1))[2:]
-    return f'{s:0>{bits}}'
-
-
-def binary_to_int(n, bits):
-    val = int(n, 2)
-    if (val & (1 << (bits - 1))):
-        val -= (1 << bits)
-    return val
+from utils import *
 
 
 # Input
