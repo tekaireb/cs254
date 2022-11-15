@@ -1,7 +1,14 @@
 import pyrtl as rtl
 
 
-def conv(A, K, rows_a: int, cols_a: int, rows_k: int, cols_k: int, bitwidth: int):
+def conv(A, K, rows_a: int, cols_a: int, rows_k: int, cols_k: int, bitwidth: int, fractional_bits=0):
+    # Perform shift to adjust for fixed-point multiplication (if necessary)
+    def fp_adjust(x):
+        if fractional_bits:
+            return (rtl.shift_right_arithmetic(x, fractional_bits))
+        else:
+            return x
+
     row_a = cols_a * bitwidth
     row_k = cols_k * bitwidth
 
@@ -29,7 +36,7 @@ def conv(A, K, rows_a: int, cols_a: int, rows_k: int, cols_k: int, bitwidth: int
 
     for r in range(rows_a - rows_k + 1):
         for c in range(cols_a - cols_k + 1):
-            ew_product = [a[r + i][c + j] * k[i][j]
+            ew_product = [fp_adjust(a[r + i][c + j] * k[i][j])
                           for j in range(len(k[0])) for i in range(len(k))]
 
             s = rtl.WireVector(bitwidth, f'res({r}, {c})')

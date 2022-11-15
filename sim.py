@@ -7,29 +7,29 @@ from conv_parallel import *
 from utils import *
 
 
-# Input
-A = [
-    [2, 0, 1, 1],
-    [0, 1, 0, 0],
-    [0, 0, 1, 0],
-    [0, 3, 0, 0]
-]
-
-# A = np.array(Image.open('images/desert_road_input.bmp')).tolist()
-
-# Kernel
-K = [
-    [-1, 0, -1],
-    [0, 0, 0],
-    [0, -1, 0]
-]
-
-# # Sobel Kernel
-# K = [
-#     [-1, 0, 1],
-#     [-2, 0, 2],
-#     [-1, 0, 1]
+# # Input
+# A = [
+#     [2, 0, 1, 1],
+#     [0, 1, 0, 0],
+#     [0, 0, 1, 0],
+#     [0, 3, 0, 0]
 # ]
+
+A = np.array(Image.open('images/desert_road_input.bmp')).tolist()
+
+# # Kernel
+# K = [
+#     [1, 0, 1],
+#     [0, 0, 0],
+#     [0, 1, 0]
+# ]
+
+# Sobel Kernel
+K = [
+    [-1, 0, 1],
+    [-2, 0, 2],
+    [-1, 0, 1]
+]
 
 # # Gaussian Blur Kernel
 # K = [
@@ -45,28 +45,29 @@ flat_k = flatten(K)
 rows_r = len(A) - len(K) + 1
 cols_r = len(A[0]) - len(K[0]) + 1
 bitwidth = 16
-fractional_bits = 8
+fractional_bits = 2
 row_r = cols_r * bitwidth
 
 a = rtl.Input(len(A) * len(A[0]) * bitwidth, 'A')
 k = rtl.Input(len(K) * len(K[0]) * bitwidth, 'K')
 
 result = rtl.WireVector(rows_r * cols_r * bitwidth, 'result')
-result <<= conv(a, k, len(A), len(A[0]), len(K), len(K[0]), bitwidth)
+result <<= conv(a, k, len(A), len(A[0]), len(
+    K), len(K[0]), bitwidth, fractional_bits)
 
 
 sim_trace = rtl.SimulationTrace()
 sim = rtl.Simulation(tracer=sim_trace)
 
-sim_inputs = {
-    'A': int(''.join([int_to_binary(i, bitwidth) for i in flat_a]), 2),
-    'K': int(''.join([int_to_binary(i, bitwidth) for i in flat_k]), 2)
-}
-
 # sim_inputs = {
-#     'A': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_a]), 2),
-#     'K': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_k]), 2)
+#     'A': int(''.join([int_to_binary(i, bitwidth) for i in flat_a]), 2),
+#     'K': int(''.join([int_to_binary(i, bitwidth) for i in flat_k]), 2)
 # }
+
+sim_inputs = {
+    'A': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_a]), 2),
+    'K': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_k]), 2)
+}
 
 # Show initial image
 plt.imshow(A, interpolation='nearest', cmap='gray')
@@ -91,9 +92,9 @@ for cycle in range(1):
         for c in range(cols_r):
             binary_value = raw_binary[row_r * r + bitwidth * c:
                                       row_r * r + bitwidth * (c + 1)]
-            result_matrix[r][c] = binary_to_int(binary_value, bitwidth)
-            # result_matrix[r][c] = binary_to_float(
-            #     binary_value, bitwidth, fractional_bits)
+            # result_matrix[r][c] = binary_to_int(binary_value, bitwidth)
+            result_matrix[r][c] = binary_to_float(
+                binary_value, bitwidth, fractional_bits)
 
     print('[')
     for row in result_matrix:
