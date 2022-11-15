@@ -1,5 +1,7 @@
 import pyrtl as rtl
 from matplotlib import pyplot as plt
+from PIL import Image
+import numpy as np
 
 from conv_parallel import *
 from utils import *
@@ -12,6 +14,8 @@ A = [
     [0, 0, 1, 0],
     [0, 3, 0, 0]
 ]
+
+# A = np.array(Image.open('images/desert_road_input.bmp')).tolist()
 
 # Kernel
 K = [
@@ -27,12 +31,21 @@ K = [
 #     [-1, 0, 1]
 # ]
 
+# # Gaussian Blur Kernel
+# K = [
+#     [1/16, 2/16, 1/16],
+#     [2/16, 4/16, 2/16],
+#     [1/16, 2/16, 1/16]
+# ]
+
+
 flat_a = flatten(A)
 flat_k = flatten(K)
 
 rows_r = len(A) - len(K) + 1
 cols_r = len(A[0]) - len(K[0]) + 1
-bitwidth = 8
+bitwidth = 16
+fractional_bits = 8
 row_r = cols_r * bitwidth
 
 a = rtl.Input(len(A) * len(A[0]) * bitwidth, 'A')
@@ -45,17 +58,15 @@ result <<= conv(a, k, len(A), len(A[0]), len(K), len(K[0]), bitwidth)
 sim_trace = rtl.SimulationTrace()
 sim = rtl.Simulation(tracer=sim_trace)
 
-# sim_inputs = {
-#     'A': [int(''.join([f'{i:08b}' for i in flat_a]), 2)] * 10,
-#     'B': [int(''.join([f'{i:08b}' for i in flat_k]), 2)] * 10
-# }
-
-# sim.step_multiple(sim_inputs)
-
 sim_inputs = {
     'A': int(''.join([int_to_binary(i, bitwidth) for i in flat_a]), 2),
     'K': int(''.join([int_to_binary(i, bitwidth) for i in flat_k]), 2)
 }
+
+# sim_inputs = {
+#     'A': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_a]), 2),
+#     'K': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_k]), 2)
+# }
 
 # Show initial image
 plt.imshow(A, interpolation='nearest', cmap='gray')
@@ -67,10 +78,12 @@ for cycle in range(1):
 
     # Extract result (as matrix)
     raw = sim.value[result]
+    print(raw)
     raw_binary = f'{raw:b}'
-    mod = len(raw_binary) % bitwidth
-    if mod:
-        raw_binary = '0' * (bitwidth - mod) + raw_binary
+
+    # Fill missing space with zeros if necessary
+    dif = (rows_r * cols_r * bitwidth) - len(raw_binary)
+    raw_binary = ('0' * dif) + raw_binary
 
     result_matrix = [[None for c in range(cols_r)] for r in range(rows_r)]
 
@@ -79,6 +92,8 @@ for cycle in range(1):
             binary_value = raw_binary[row_r * r + bitwidth * c:
                                       row_r * r + bitwidth * (c + 1)]
             result_matrix[r][c] = binary_to_int(binary_value, bitwidth)
+            # result_matrix[r][c] = binary_to_float(
+            #     binary_value, bitwidth, fractional_bits)
 
     print('[')
     for row in result_matrix:
