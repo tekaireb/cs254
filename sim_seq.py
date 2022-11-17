@@ -3,22 +3,6 @@ from matplotlib import pyplot as plt
 
 from conv_sequential import conv
 
-
-def flatten(l): return [val for sublist in l for val in sublist]
-
-
-def int_to_binary(n, bits):
-    s = bin(n & ((1 << bits) - 1))[2:]
-    return f'{s:0>{bits}}'
-
-
-def binary_to_int(n, bits):
-    val = int(n, 2)
-    if (val & (1 << (bits - 1))):
-        val -= (1 << bits)
-    return val
-
-
 # Input
 A = [
     [2, 0, 1, 1],
@@ -45,10 +29,6 @@ mem_i = rtl.MemBlock(bitwidth=bitwidth, addrwidth=32,
                      name="input_img")
 mem_k = rtl.MemBlock(bitwidth=bitwidth, addrwidth=32,
                      name="input_kernel")
-
-rows_r = len(A) - len(K) + 1
-cols_r = len(A[0]) - len(K[0]) + 1
-row_r = cols_r * bitwidth
 
 reset = rtl.Input(bitwidth=1, name="reset")
 done = rtl.Output(bitwidth=1, name="done")
