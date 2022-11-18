@@ -9,22 +9,20 @@ def conv(A,
          rows_k: int,
          cols_k: int,
          bitwidth: int,
-         fractional_bits=0):
-    
-    # Perform shift to adjust for fixed-point multiplication (if necessary)
+         fractional_bits: int):
+
     def fp_adjust(x):
         if fractional_bits:
             return (rtl.shift_right_arithmetic(x, fractional_bits))
         else:
             return x
-
-    output_img = rtl.MemBlock(bitwidth=2*bitwidth + 1,
+    
+    output_img = rtl.MemBlock(bitwidth=bitwidth,
                               addrwidth=32, name='output_img')
-
     a_row = rtl.Register(bitwidth=16, name='a_row', reset_value=rows_k//2)
     a_col = rtl.Register(bitwidth=16, name='a_col', reset_value=cols_k//2)
 
-    aggregator = rtl.Register(bitwidth=2 * bitwidth + 1, name='aggregator')
+    aggregator = rtl.Register(bitwidth=bitwidth, name='aggregator')
     complete = rtl.Register(bitwidth=1, name="complete")
 
     last_row = rows_a - rows_k // 2
@@ -73,7 +71,7 @@ def conv(A,
                 aggregator.next |= 0
                 output_img[rtl.truncate(
                     a_row * cols_a + a_col, output_img.addrwidth
-                )] |= aggregator
+                )] |=  rtl.truncate(aggregator + fp_adjust(focused_pixel * focused_kernel), output_img.bitwidth)
             with rtl.otherwise:
                 next_a_row |= a_row
                 next_a_col |= a_col

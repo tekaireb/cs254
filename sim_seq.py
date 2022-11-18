@@ -6,7 +6,7 @@ import numpy as np
 
 from conv_sequential import conv
 
-# Input
+#Input
 # A = [
 #     [2, 0, 1, 1],
 #     [0, 1, 0, 0],
@@ -31,6 +31,12 @@ K = [
     [-2, 0, 2],
     [-1, 0, 1]
 ]
+
+# K = [
+#     [1, 0, 1],
+#     [0, 0, 0],
+#     [0, 1, 0]
+# ]
 
 flat_a = flatten(A)
 flat_k = flatten(K)
@@ -114,10 +120,14 @@ while sim.inspect("done") == 0:
 sim_trace.render_trace(trace_list=["reset", "done", "a_row", "a_col", "focused_pixel_idx"])
 
 output = sim.inspect_mem(output_memory)
-convolution = [[0 for _ in range(len(A[0]))] for _ in range(len(A))]
+rows_r = len(A) - len(K) + 1
+cols_r = len(A[0]) - len(K[0]) + 1
+convolution = [[0.0 for _ in range(cols_r)] for _ in range(rows_r)]
 
 for (pixel, value) in output.items():
-    convolution[pixel // len(convolution[0])][pixel % len(convolution[0])] = binary_to_float(f'{value:b}', bitwidth, fractional_bits)
+    row = pixel // len(A[0]) - len(K)//2
+    col = pixel % len(A[0]) - len(K[0])//2
+    convolution[row][col] = binary_to_float(f'{value:b}', bitwidth, fractional_bits)
 
 print("CONVOLUTION")
 print(convolution)
