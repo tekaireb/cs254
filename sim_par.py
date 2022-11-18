@@ -12,25 +12,25 @@ from utils import *
 # A = np.ones((8, 8)).tolist()
 # A = np.ones((16, 16)).tolist()
 # A = np.ones((32, 32)).tolist()
-A = np.ones((64, 64)).tolist()
+# A = np.ones((64, 64)).tolist()
 # A = np.ones((128, 128)).tolist()
 
-# # Input
-# A = [
-#     [2, 0, 1, 1],
-#     [0, 1, 0, 0],
-#     [0, 0, 1, 0],
-#     [0, 3, 0, 0]
-# ]
+# Input
+A = [
+    [2, 0, 1, 1],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 3, 0, 0]
+]
 
 # A = np.array(Image.open('images/desert_road_input.bmp')).tolist()
 
-# # Kernel
-# K = [
-#     [1, 0, 1],
-#     [0, 0, 0],
-#     [0, 1, 0]
-# ]
+# Kernel
+K = [
+    [1, 0, 1],
+    [0, 0, 0],
+    [0, 1, 0]
+]
 
 # # Sobel Kernel
 # K = [
@@ -47,7 +47,7 @@ A = np.ones((64, 64)).tolist()
 # ]
 
 # Test kernels
-K = np.ones((3, 3))
+# K = np.ones((3, 3))
 # K = np.ones((4, 4))
 # K = np.ones((5, 5))
 # K = np.ones((6, 6))
@@ -65,7 +65,7 @@ a = rtl.Input(len(A) * len(A[0]) * bitwidth, 'A')
 k = rtl.Input(len(K) * len(K[0]) * bitwidth, 'K')
 
 result = rtl.WireVector(rows_r * cols_r * bitwidth, 'result')
-result <<= conv_parallel_improved.conv(a, k, len(A), len(A[0]), len(
+result <<= conv_parallel.conv(a, k, len(A), len(A[0]), len(
     K), len(K[0]), bitwidth, fractional_bits)
 
 
