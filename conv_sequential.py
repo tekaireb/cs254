@@ -18,7 +18,7 @@ def conv(A,
             return x
     
     output_img = rtl.MemBlock(bitwidth=bitwidth,
-                              addrwidth=32, name='output_img')
+                              addrwidth=A.addrwidth, name='output_img')
     a_row = rtl.Register(bitwidth=16, name='a_row', reset_value=rows_k//2)
     a_col = rtl.Register(bitwidth=16, name='a_col', reset_value=cols_k//2)
 

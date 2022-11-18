@@ -3,8 +3,16 @@ from matplotlib import pyplot as plt
 from utils import *
 from PIL import Image
 import numpy as np
-
+import math
 from conv_sequential import conv
+
+# Test inputs
+# A = np.ones((4, 4)).tolist()
+# A = np.ones((8, 8)).tolist()
+# A = np.ones((16, 16)).tolist()
+# A = np.ones((32, 32)).tolist()
+# A = np.ones((64, 64)).tolist()
+# A = np.ones((128, 128)).tolist()
 
 #Input
 # A = [
@@ -14,9 +22,15 @@ from conv_sequential import conv
 #     [0, 3, 0, 0]
 # ]
 
-A = np.array(Image.open('images/desert_road_input.bmp')).tolist()
+A = np.array(Image.open('images/sobel/desert_road_input.bmp')).tolist()
 
 a_len = len(A) * len(A[0])
+
+# Test kernels
+# K = np.ones((3, 3))
+# K = np.ones((4, 4))
+# K = np.ones((5, 5))
+# K = np.ones((6, 6))
 
 # Kernel
 # K = [
@@ -43,9 +57,9 @@ flat_k = flatten(K)
 bitwidth = 16
 fractional_bits = 2
 
-mem_i = rtl.MemBlock(bitwidth=bitwidth, addrwidth=32,
+mem_i = rtl.MemBlock(bitwidth=bitwidth, addrwidth=math.ceil(math.log2(len(flat_a))),
                      name="input_img")
-mem_k = rtl.MemBlock(bitwidth=bitwidth, addrwidth=32,
+mem_k = rtl.MemBlock(bitwidth=bitwidth, addrwidth=math.ceil(math.log2(len(flat_a))),
                      name="input_kernel")
 
 reset = rtl.Input(bitwidth=1, name="reset")
@@ -60,28 +74,28 @@ done <<= complete
 plt.imshow(A, interpolation='nearest', cmap='gray')
 plt.savefig('input.png')
 
-print("IMAGE")
-print(A)
-print()
-print("KERNEL")
-print(K)
-print()
+# print("IMAGE")
+# print(A)
+# print()
+# print("KERNEL")
+# print(K)
+# print()
 
 # At first we load the kernel and images to their respective memories.
 writing_image = rtl.Input(bitwidth=1, name="writing_image")
-addr = rtl.Input(bitwidth=32, name="pixel_addr")
+addr = rtl.Input(bitwidth=mem_i.addrwidth, name="pixel_addr")
 pixel = rtl.Input(bitwidth=bitwidth, name="pixel")
 mem_i[addr] <<= rtl.MemBlock.EnabledWrite(pixel, writing_image)
 
 writing_kernel = rtl.Input(bitwidth=1, name="writing_kernel")
-addr = rtl.Input(bitwidth=32, name="kernel_addr")
+addr = rtl.Input(bitwidth=mem_k.addrwidth, name="kernel_addr")
 pixel = rtl.Input(bitwidth=bitwidth, name="kernel_value")
 mem_k[addr] <<= rtl.MemBlock.EnabledWrite(pixel, writing_kernel)
 
-sim_inputs = {
-    'A': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_a]), 2),
-    'K': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_k]), 2)
-}
+# sim_inputs = {
+#     'A': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_a]), 2),
+#     'K': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_k]), 2)
+# }
 
 sim_trace = rtl.SimulationTrace()
 sim = rtl.Simulation(tracer=sim_trace)
@@ -105,8 +119,9 @@ for i in range(len(flat_k)):
               "writing_image": False,
               "writing_kernel": True,
               })
-
+cycles = 0
 while sim.inspect("done") == 0:
+    cycles = cycles + 1
     sim.step({
         "reset": 0,
         "kernel_addr": 0,
@@ -129,8 +144,13 @@ for (pixel, value) in output.items():
     col = pixel % len(A[0]) - len(K[0])//2
     convolution[row][col] = binary_to_float(f'{value:b}', bitwidth, fractional_bits)
 
-print("CONVOLUTION")
-print(convolution)
+# print("CONVOLUTION")
+# print(convolution)
 
 plt.imshow(convolution, interpolation="nearest", cmap="gray")
 plt.savefig("output_seq.png")
+
+# print("Number of cycles: ", cycles)
+# ta = rtl.TimingAnalysis()
+# print(f'Max timing delay: {ta.max_length()} ps')
+# print(f'Area: {sum(rtl.area_estimation())} mm^2')
