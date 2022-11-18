@@ -3,9 +3,17 @@ from matplotlib import pyplot as plt
 from PIL import Image
 import numpy as np
 
-from conv_parallel import *
+import conv_parallel
+import conv_parallel_improved
 from utils import *
 
+# Test inputs
+# A = np.ones((4, 4)).tolist()
+# A = np.ones((8, 8)).tolist()
+# A = np.ones((16, 16)).tolist()
+# A = np.ones((32, 32)).tolist()
+A = np.ones((64, 64)).tolist()
+# A = np.ones((128, 128)).tolist()
 
 # # Input
 # A = [
@@ -15,7 +23,7 @@ from utils import *
 #     [0, 3, 0, 0]
 # ]
 
-A = np.array(Image.open('images/desert_road_input.bmp')).tolist()
+# A = np.array(Image.open('images/desert_road_input.bmp')).tolist()
 
 # # Kernel
 # K = [
@@ -24,12 +32,12 @@ A = np.array(Image.open('images/desert_road_input.bmp')).tolist()
 #     [0, 1, 0]
 # ]
 
-# Sobel Kernel
-K = [
-    [-1, 0, 1],
-    [-2, 0, 2],
-    [-1, 0, 1]
-]
+# # Sobel Kernel
+# K = [
+#     [-1/2, 0, 1/2],
+#     [-1, 0, 1],
+#     [-1/2, 0, 1/2]
+# ]
 
 # # Gaussian Blur Kernel
 # K = [
@@ -38,6 +46,11 @@ K = [
 #     [1/16, 2/16, 1/16]
 # ]
 
+# Test kernels
+K = np.ones((3, 3))
+# K = np.ones((4, 4))
+# K = np.ones((5, 5))
+# K = np.ones((6, 6))
 
 flat_a = flatten(A)
 flat_k = flatten(K)
@@ -52,7 +65,7 @@ a = rtl.Input(len(A) * len(A[0]) * bitwidth, 'A')
 k = rtl.Input(len(K) * len(K[0]) * bitwidth, 'K')
 
 result = rtl.WireVector(rows_r * cols_r * bitwidth, 'result')
-result <<= conv(a, k, len(A), len(A[0]), len(
+result <<= conv_parallel_improved.conv(a, k, len(A), len(A[0]), len(
     K), len(K[0]), bitwidth, fractional_bits)
 
 
@@ -69,17 +82,17 @@ sim_inputs = {
     'K': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_k]), 2)
 }
 
-# Show initial image
-plt.imshow(A, interpolation='nearest', cmap='gray')
-plt.savefig('input.png')
-plt.show()
+# # Show initial image
+# plt.imshow(A, interpolation='nearest', cmap='gray')
+# plt.savefig('input.png')
+# plt.show()
 
 for cycle in range(1):
     sim.step(sim_inputs)
 
     # Extract result (as matrix)
     raw = sim.value[result]
-    print(raw)
+    # print(raw)
     raw_binary = f'{raw:b}'
 
     # Fill missing space with zeros if necessary
@@ -96,17 +109,18 @@ for cycle in range(1):
             result_matrix[r][c] = binary_to_float(
                 binary_value, bitwidth, fractional_bits)
 
-    print('[')
-    for row in result_matrix:
-        print(' ', row)
-    print(']')
+    # # Print result matrix
+    # print('[')
+    # for row in result_matrix:
+    #     print(' ', row)
+    # print(']')
 
-    # Show final image
-    plt.imshow(result_matrix, interpolation='nearest', cmap='gray')
-    plt.savefig('output.png')
-    plt.show()
+    # # Show final image
+    # plt.imshow(result_matrix, interpolation='nearest', cmap='gray')
+    # plt.savefig('output.png')
+    # plt.show()
 
-sim_trace.render_trace(trace_list=['A', 'K', 'result'])
+# sim_trace.render_trace(trace_list=['A', 'K', 'result'])
 
 # with open('vis.txt', 'w') as f:
 #     rtl.output_to_graphviz(f)
@@ -114,7 +128,7 @@ sim_trace.render_trace(trace_list=['A', 'K', 'result'])
 
 # Analysis
 
-# ta = rtl.TimingAnalysis()
-# print(f'Max timing delay: {ta.max_length()} ps')
+ta = rtl.TimingAnalysis()
+print(f'Max timing delay: {ta.max_length()} ps')
 
-# print(f'Area: {sum(rtl.area_estimation())} mm^2')
+print(f'Area: {sum(rtl.area_estimation())} mm^2')

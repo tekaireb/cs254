@@ -1,4 +1,5 @@
 import pyrtl as rtl
+from adders import *
 
 
 def conv(A, K, rows_a: int, cols_a: int, rows_k: int, cols_k: int, bitwidth: int, fractional_bits=0):
@@ -47,7 +48,7 @@ def conv(A, K, rows_a: int, cols_a: int, rows_k: int, cols_k: int, bitwidth: int
 
             # s = rtl.WireVector(bitwidth, f'res({r}, {c})')
             s = rtl.WireVector(bitwidth)
-            s <<= sum(ew_product)
+            s <<= fast_group_adder(ew_product)
 
             result.append(s)
 
