@@ -1,29 +1,40 @@
 import pyrtl as rtl
 from matplotlib import pyplot as plt
 from utils import *
+from PIL import Image
+import numpy as np
 
 from conv_sequential import conv
 
 # Input
-A = [
-    [2, 0, 1, 1],
-    [0, 1, 0, 0],
-    [0, 0, 1, 0],
-    [0, 3, 0, 0]
-]
+# A = [
+#     [2, 0, 1, 1],
+#     [0, 1, 0, 0],
+#     [0, 0, 1, 0],
+#     [0, 3, 0, 0]
+# ]
+
+A = np.array(Image.open('images/desert_road_input.bmp')).tolist()
 
 a_len = len(A) * len(A[0])
 
 # Kernel
+# K = [
+#     [1, 1, 1],
+#     [1, 3, 1],
+#     [1, 1, 1]
+# ]
+
+# Sobel Kernel
 K = [
-    [1, 1, 1],
-    [1, 3, 1],
-    [1, 1, 1]
+    [-1, 0, 1],
+    [-2, 0, 2],
+    [-1, 0, 1]
 ]
 
 flat_a = flatten(A)
 flat_k = flatten(K)
-bitwidth = 8
+bitwidth = 16
 fractional_bits = 2
 
 mem_i = rtl.MemBlock(bitwidth=bitwidth, addrwidth=32,
@@ -112,4 +123,4 @@ print("CONVOLUTION")
 print(convolution)
 
 plt.imshow(convolution, interpolation="nearest", cmap="gray")
-plt.savefig("output.png")
+plt.savefig("output_seq.png")
