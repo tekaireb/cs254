@@ -132,7 +132,10 @@ while sim.inspect("done") == 0:
         "writing_kernel": False,
     })
 
-sim_trace.render_trace(trace_list=["reset", "done", "a_row", "a_col", "focused_pixel_idx"])
+# sim_trace.render_trace(trace_list=["reset", "done", "a_row", "a_col", "focused_pixel_idx"])
+
+sim_trace.render_trace()
+sim_trace.print_trace(base=10)
 
 output = sim.inspect_mem(output_memory)
 rows_r = len(A) - len(K) + 1
