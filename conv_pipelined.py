@@ -8,17 +8,25 @@ def conv(A,
          cols_a: int,
          rows_k: int,
          cols_k: int,
-         bitwidth: int):
-    output_img = rtl.MemBlock(bitwidth=2 * bitwidth + 1,
-                              addrwidth=32, name='output_img')
+         bitwidth: int,
+         fractional_bits: int):
+
+    def fp_adjust(x):
+        if fractional_bits:
+            return (rtl.shift_right_arithmetic(x, fractional_bits))
+        else:
+            return x
+
+    output_img = rtl.MemBlock(bitwidth=bitwidth,
+                              addrwidth=A.addrwidth, name='output_img')
 
     a_row = rtl.Register(bitwidth=16, name='a_row', reset_value=rows_k // 2)
     a_col = rtl.Register(bitwidth=16, name='a_col', reset_value=cols_k // 2)
     k_row = rtl.Register(bitwidth=16, name='k_row')
     k_col = rtl.Register(bitwidth=16, name='k_col')
 
-    mult_res = rtl.Register(bitwidth=2 * bitwidth + 1, name='mult_res')
-    aggregator = rtl.Register(bitwidth=2 * bitwidth + 1, name='aggregator')
+    mult_res = rtl.Register(bitwidth=bitwidth, name='mult_res')
+    aggregator = rtl.Register(bitwidth=bitwidth, name='aggregator')
     complete = rtl.Register(bitwidth=1, name='complete')
 
     last_row = rows_a - rows_k // 2
@@ -62,13 +70,15 @@ def conv(A,
                                             (a_col == last_col - 1),
                                             True, complete)
                 aggregator.next |= 0
-                output_img[rtl.truncate(a_row * cols_a + a_col, output_img.addrwidth)] |= aggregator
+                output_img[rtl.truncate(
+                    a_row * cols_a + a_col, output_img.addrwidth
+                )] |= rtl.truncate(aggregator + fp_adjust(focused_pixel * focused_kernel), output_img.bitwidth)
             with rtl.otherwise:
                 next_a_row |= a_row
                 next_a_col |= a_col
                 next_k_row |= rtl.select(k_col == cols_k - 1, k_row + 1, k_row)
                 next_k_col |= rtl.select(k_col == cols_k - 1, 0, k_col + 1)
-                mult_res.next |= focused_pixel * focused_kernel
+                mult_res.next |= fp_adjust(focused_pixel * focused_kernel)
                 aggregator.next |= aggregator + mult_res
                 complete.next |= complete
 
