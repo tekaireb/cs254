@@ -55,7 +55,7 @@ K = [
 flat_a = flatten(A)
 flat_k = flatten(K)
 bitwidth = 16
-fractional_bits = 2
+fractional_bits = 0
 
 mem_i = rtl.MemBlock(bitwidth=bitwidth, addrwidth=math.ceil(math.log2(len(flat_a))),
                      name="input_img")

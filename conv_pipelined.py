@@ -52,7 +52,7 @@ def conv(A,
     a_row.next <<= next_a_row
     a_col.next <<= next_a_col
 
-    add_once = rtl.Register(bitwidth=1, name="add_once")
+    # add_once = rtl.Register(bitwidth=1, name="add_once")
 
     with rtl.conditional_assignment:
         with reset:
@@ -60,27 +60,29 @@ def conv(A,
             next_k_col |= 0
             next_a_row |= a_row.reset_value
             next_a_col |= a_col.reset_value
-            add_once.next |= 1
+            # add_once.next |= 1
+            mult_res.next |= 0
             aggregator.next |= 0
             complete.next |= 0
         with rtl.otherwise:
             with (k_row == rows_k - 1) & (k_col == cols_k - 1):
-                with add_once:
-                    aggregator.next |= aggregator + mult_res
-                    add_once.next |= 0
-                with rtl.otherwise:
-                    next_k_row |= 0
-                    next_k_col |= 0
-                    next_a_row |= rtl.select(a_col == last_col - 1, a_row + 1, a_row)
-                    next_a_col |= rtl.select(a_col == last_col - 1, a_col.reset_value, a_col + 1)
-                    complete.next |= rtl.select((a_row == last_row - 1) &
-                                            (a_col == last_col - 1),
-                                            True, complete)
-                    aggregator.next |= 0
-                    add_once.next |= 1
-                    output_img[rtl.truncate(
-                        a_row * cols_a + a_col, output_img.addrwidth
-                        )] |= rtl.truncate(aggregator + fp_adjust(focused_pixel * focused_kernel), output_img.bitwidth)
+                # with add_once:
+                #     aggregator.next |= aggregator + mult_res
+                #     add_once.next |= 0
+                # with rtl.otherwise:
+                next_k_row |= 0
+                next_k_col |= 0
+                next_a_row |= rtl.select(a_col == last_col - 1, a_row + 1, a_row)
+                next_a_col |= rtl.select(a_col == last_col - 1, a_col.reset_value, a_col + 1)
+                complete.next |= rtl.select((a_row == last_row - 1) &
+                                        (a_col == last_col - 1),
+                                        True, complete)
+                mult_res.next |= 0
+                aggregator.next |= 0
+                # add_once.next |= 1
+                output_img[rtl.truncate(
+                    a_row * cols_a + a_col, output_img.addrwidth
+                    )] |= rtl.truncate(aggregator + fp_adjust(focused_pixel * focused_kernel), output_img.bitwidth)
             with rtl.otherwise:
                 next_a_row |= a_row
                 next_a_col |= a_col
