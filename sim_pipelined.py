@@ -97,6 +97,8 @@ mem_k[addr] <<= rtl.MemBlock.EnabledWrite(pixel, writing_kernel)
 #     'K': int(''.join([float_to_binary(i, bitwidth, fractional_bits) for i in flat_k]), 2)
 # }
 
+# ／(^ㅅ^)＼ Create sim trace
+
 sim_trace = rtl.SimulationTrace()
 sim = rtl.Simulation(tracer=sim_trace)
 
@@ -132,6 +134,7 @@ while sim.inspect("done") == 0:
         "writing_kernel": False,
     })
 
+# ／(^ㅅ^)＼ Render sim trace
 sim_trace.render_trace(trace_list=["reset", "done", "a_row", "a_col", "focused_pixel_idx"])
 
 output = sim.inspect_mem(output_memory)
